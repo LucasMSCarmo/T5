@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Ótimo para desenvolvimento. Mude para "postgresql" ou "mysql" em produção.
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id         Int        @id @default(autoincrement())
+  nome       String
+  nomeSocial String
+  email      String     @unique
+  cpf        String     @unique
+  
+  // Relações com outras tabelas
+  rgs        RG[]
+  pets       Pet[]
+  telefones  Telefone[] // Agora é uma relação com a tabela Telefone
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+// NOVA ENTIDADE PARA TELEFONE
+model Telefone {
+  id     Int    @id @default(autoincrement())
+  numero String
+
+  // Relação com Cliente
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  clienteId Int
+}
+
+model RG {
+  id          Int      @id @default(autoincrement())
+  numero      String
+  dataEmissao DateTime
+  
+  // Relação com Cliente
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  clienteId Int
+}
+
+model Pet {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  tipo       String
+  raca       String
+  genero     String
+  
+  // Relação com Cliente
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  clienteId Int
+  
+  // Relações com consumos
+  produtosConsumidos ProdutoConsumido[]
+  servicosConsumidos ServicoConsumido[]
+}
+
+model Produto {
+  id     Int    @id @default(autoincrement())
+  nome   String @unique
+  preco  Float
+  tipo   String
+
+  // Relação com consumo
+  consumos ProdutoConsumido[]
+}
+
+model Servico {
+  id    Int    @id @default(autoincrement())
+  nome  String @unique
+  preco Float
+  tipo  String
+  
+  // Relação com consumo
+  consumos ServicoConsumido[]
+}
+
+model ProdutoConsumido {
+  id          Int      @id @default(autoincrement())
+  quantidade  Int
+  data        DateTime @default(now())
+
+  // Relação com Pet
+  pet   Pet @relation(fields: [petId], references: [id])
+  petId Int
+  
+  // Relação com Produto
+  produto   Produto @relation(fields: [produtoId], references: [id])
+  produtoId Int
+}
+
+model ServicoConsumido {
+  id   Int      @id @default(autoincrement())
+  data DateTime @default(now())
+
+  // Relação com Pet
+  pet   Pet @relation(fields: [petId], references: [id])
+  petId Int
+  
+  // Relação com Serviço
+  servico   Servico @relation(fields: [servicoId], references: [id])
+  servicoId Int
+}
